@@ -4,11 +4,10 @@
 /* and a global catalog number                                                */
 /******************************************************************************/
 
-DELIMITER GO
-
 USE specify_test;
 
-GO
+-- Configuration table
+-- field collectioncode contains the identifier from collection.code
 
 CREATE TABLE IF NOT EXISTS `mfn_collection`
 (
@@ -25,8 +24,6 @@ CREATE TABLE IF NOT EXISTS `mfn_collection`
   CONSTRAINT pk_mfn_collection_01 PRIMARY KEY (`collectioncode`)
 ) DEFAULT CHARSET=utf8;
 
-GO
-
 INSERT 
   INTO `mfn_collection` (`collectioncode`, `prefix`)
        SELECT `code`, 
@@ -35,9 +32,20 @@ INSERT
         WHERE (`code` NOT IN (SELECT `collectioncode`
                                 FROM `mfn_collection`));
 
-GO
-
 DROP FUNCTION IF EXISTS `f_mfn_getCollectionCode`;
+DROP FUNCTION IF EXISTS `f_mfn_catno_getacronym`;
+DROP FUNCTION IF EXISTS `f_mfn_catno_getyear`;
+DROP FUNCTION IF EXISTS `f_mfn_catno_getnumber`;
+DROP FUNCTION IF EXISTS `f_mfn_catno_getsubno`;
+DROP FUNCTION IF EXISTS `f_mfn_adjustseparator`;
+DROP FUNCTION IF EXISTS `f_mfn_adjustacronym`;
+DROP FUNCTION IF EXISTS `f_mfn_catno2sortorderstring`;
+DROP FUNCTION IF EXISTS `f_mfn_catno2gin`;
+
+DROP TRIGGER IF EXISTS `tr_mfn_collectionobject_inscatno`;
+DROP TRIGGER IF EXISTS `tr_mfn_collectionobject_updcatno`;
+
+DELIMITER GO
 
 GO
 
@@ -47,10 +55,6 @@ CREATE FUNCTION `f_mfn_getCollectionCode`($collid INT)
   RETURN (SELECT `Code`
             FROM `collection`
            WHERE (`CollectionID` = $collid));
-
-GO
-
-DROP FUNCTION IF EXISTS `f_mfn_catno_getacronym`;
 
 GO
 
@@ -72,10 +76,6 @@ BEGIN
 
   RETURN TRIM(SUBSTRING($value,1,$index));
 END
-
-GO
-
-DROP FUNCTION IF EXISTS `f_mfn_catno_getyear`;
 
 GO
 
@@ -120,10 +120,6 @@ BEGIN
 
   RETURN $result;
 END
-
-GO
-
-DROP FUNCTION IF EXISTS `f_mfn_catno_getnumber`;
 
 GO
 
@@ -173,10 +169,6 @@ END
 
 GO
 
-DROP FUNCTION IF EXISTS `f_mfn_catno_getsubno`;
-
-GO
-
 CREATE FUNCTION `f_mfn_catno_getsubno`($value         VARCHAR(255)
                                      , $yearseparator VARCHAR(1))
   RETURNS VARCHAR(255)
@@ -219,10 +211,6 @@ END
 
 GO
 
-DROP FUNCTION IF EXISTS `f_mfn_adjustseparator`;
-
-GO
-
 CREATE FUNCTION `f_mfn_adjustseparator`($value     VARCHAR(255)
                                       , $separator VARCHAR(1))
   RETURNS VARCHAR(255)
@@ -232,10 +220,6 @@ BEGIN
 
   RETURN REPLACE(REPLACE(REPLACE(REPLACE($value, '/', $separator), '.', $separator), ' ', $separator), CONCAT($separator, $separator), $separator);
 END
-
-GO
-
-DROP FUNCTION IF EXISTS `f_mfn_adjustacronym`;
 
 GO
 
@@ -256,10 +240,6 @@ BEGIN
 
   RETURN $result;
 END
-
-GO
-
-DROP FUNCTION IF EXISTS `f_mfn_catno2sortorderstring`;
 
 GO
 
@@ -293,10 +273,6 @@ BEGIN
          , COALESCE(CONCAT($separator, `f_mfn_catno_getsubno`($value, $yearseparator)), ''));
   END IF;
 END
-
-GO
-
-DROP FUNCTION IF EXISTS `f_mfn_catno2gin`;
 
 GO
 
@@ -353,10 +329,6 @@ BEGIN
 
   RETURN `f_mfn_adjustseparator`($result, $separator);
 END
-
-GO
-
-DROP TRIGGER IF EXISTS `tr_mfn_collectionobject_inscatno`;
 
 GO
 
@@ -427,10 +399,6 @@ END;
 
 GO
 
-DROP TRIGGER IF EXISTS `tr_mfn_collectionobject_updcatno`;
-
-GO
-
 CREATE TRIGGER `tr_mfn_collectionobject_updcatno` BEFORE UPDATE ON `collectionobject`
   FOR EACH ROW 
 BEGIN
@@ -492,7 +460,7 @@ BEGIN
                                                                , $so_allwayswithyear);
     END IF;
   END IF;
-END
+END;
 
 GO
 

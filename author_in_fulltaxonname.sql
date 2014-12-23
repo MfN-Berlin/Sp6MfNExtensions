@@ -3,15 +3,12 @@
 /* Author in fulltaxonname                                                    */
 /******************************************************************************/
 
-DELIMITER GO
-
 USE specify;
 
-GO
-
 DROP TRIGGER IF EXISTS `tr_mfn_taxon_insfulltaxonname`;
+DROP TRIGGER IF EXISTS `tr_mfn_taxon_updfulltaxonname`;
 
-GO
+DELIMITER GO
 
 CREATE TRIGGER `tr_mfn_taxon_insfulltaxonname` BEFORE INSERT ON `taxon`
   FOR EACH ROW 
@@ -21,10 +18,6 @@ BEGIN
     SET NEW.`FullName` = CONCAT(NEW.`FullName`, ' ', NEW.`Author`);
   END IF;
 END
-
-GO
-
-DROP TRIGGER IF EXISTS `tr_mfn_taxon_updfulltaxonname`;
 
 GO
 
