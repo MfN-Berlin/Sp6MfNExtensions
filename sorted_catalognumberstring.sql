@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `mfn_collection`
 (
   `collectioncode`      VARCHAR(128) NOT NULL,
   `prefix`              VARCHAR(128) NOT NULL DEFAULT '',
+  `separator`           VARCHAR(1)   NOT NULL DEFAULT '',
   `yearseparator`       VARCHAR(1)   NOT NULL DEFAULT '/',
   `so_separator`        VARCHAR(1)   NOT NULL DEFAULT '_',
   `so_allwayswithyear`  BIT          NOT NULL DEFAULT 0,
@@ -20,6 +21,8 @@ CREATE TABLE IF NOT EXISTS `mfn_collection`
   `gin_separator`       VARCHAR(1)   NOT NULL DEFAULT '_',
   `gin_allwayswithyear` BIT          NOT NULL DEFAULT 0,
   `gin_maxnumberlength` INT          NOT NULL DEFAULT 0,
+  `autoNumberYear`      INT          NULL,
+  `autoNumberMax`       INT          NULL,
 
   CONSTRAINT pk_mfn_collection_01 PRIMARY KEY (`collectioncode`)
 ) DEFAULT CHARSET=utf8;
@@ -378,7 +381,8 @@ BEGIN
                             FROM `mfn_collection`
                            WHERE (`collectioncode` = $prefix));
 
-    IF (`f_mfn_adjustacronym`(`f_mfn_catno_getacronym`(NEW.`CatalogNumber`), $gin_separator) = $prefix) THEN
+    IF (`f_mfn_adjustacronym`(`f_mfn_catno_getacronym`(NEW.`CatalogNumber`), $gin_separator) = $prefix)
+    OR (`f_mfn_adjustacronym`(`f_mfn_catno_getacronym`(NEW.`CatalogNumber`), $gin_separator) LIKE CONCAT($prefix, '%')) THEN
       SET $prefix = '';
     END IF;
 
@@ -442,7 +446,8 @@ BEGIN
                               FROM `mfn_collection`
                              WHERE (`collectioncode` = $prefix));
 
-      IF (`f_mfn_adjustacronym`(`f_mfn_catno_getacronym`(NEW.`CatalogNumber`), $gin_separator) = $prefix) THEN
+      IF (`f_mfn_adjustacronym`(`f_mfn_catno_getacronym`(NEW.`CatalogNumber`), $gin_separator) = $prefix)
+      OR (`f_mfn_adjustacronym`(`f_mfn_catno_getacronym`(NEW.`CatalogNumber`), $gin_separator) LIKE CONCAT($prefix, '%')) THEN
         SET $prefix = '';
       END IF;
 
